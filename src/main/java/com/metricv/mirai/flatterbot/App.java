@@ -5,16 +5,20 @@ import com.metricv.mirai.matcher.PrefixMatcher;
 import com.metricv.mirai.matcher.PsuedoMatcher;
 import com.metricv.mirai.matcher.RegexMatcher;
 import com.metricv.mirai.router.*;
+import net.mamoe.mirai.console.MiraiConsole;
+import net.mamoe.mirai.console.command.BlockingCommand;
+import net.mamoe.mirai.console.command.CommandBuilder;
+import net.mamoe.mirai.console.command.CommandSender;
+import net.mamoe.mirai.console.command.JCommandManager;
 import net.mamoe.mirai.console.plugins.Config;
 import net.mamoe.mirai.console.plugins.PluginBase;
 import net.mamoe.mirai.message.data.*;
 import org.intellij.lang.annotations.RegExp;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
-import java.net.URLDecoder;
 import java.util.*;
 import java.util.jar.JarFile;
-import java.util.zip.ZipInputStream;
 
 class App extends PluginBase {
 
@@ -42,22 +46,10 @@ class App extends PluginBase {
     }
 
     public void onEnable() {
-
         Config myConfig = this.loadConfig("formula.yml");
-
-        List<String> triggers = new ArrayList<String>();
-        triggers.add("来个(?<name>.+)笑话");
-        triggers.add("(?<name>.+)太强了");
-        List<String> templates = new ArrayList<String>();
-        templates.add("Erdos相信上帝有一本记录所有数学中绝妙证明的书，上帝相信这本书在%name%手里");
-
-        myConfig.setIfAbsent("trigger", triggers);
-        myConfig.setIfAbsent("template",templates);
 
         finalTriggers = myConfig.getStringList("trigger");
         finalTemplates = myConfig.getStringList("template");
-
-        myConfig.save();
 
         ComplexRouting crtest = ComplexRouting.withBlankRoot();
         ComplexRouting.MatcherNode opt_me = crtest.makeNode("At", new AtMatcher(-2));
@@ -87,6 +79,26 @@ class App extends PluginBase {
         Router.getInstance().addTempRouting(crtest);
         Router.getInstance().addGroupRouting(AttedOne);
         Router.getInstance().addGroupRouting(Attedtwo);
+
+        JCommandManager.getInstance().register(this, new BlockingCommand(
+                "flatter", new ArrayList<>(), "FlatterBot相关命令", "/flatter") {
+            @Override
+            public boolean onCommandBlocking(@NotNull CommandSender commandSender, @NotNull List<String> list) {
+                if(list.size()==0) {
+                    commandSender.sendMessageBlocking("用法： /flatter [指令]\n指令包括：\n reload 重载配置文件。");
+                    return false;
+                } else if (list.get(0).equals("reload")) {
+                    Config myConfigTemp = App.this.loadConfig("formula.yml");
+                    finalTriggers = myConfigTemp.getStringList("trigger");
+                    finalTemplates = myConfigTemp.getStringList("template");
+                    commandSender.sendMessageBlocking("重载配置文件成功");
+                    return true;
+                } else {
+                    commandSender.sendMessageBlocking("指令未识别");
+                    return false;
+                }
+            }
+        });
     }
 
     private void flatter(RoutingResult rr) {
