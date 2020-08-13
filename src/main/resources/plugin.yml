@@ -1,0 +1,6 @@
+name: "FlatterBot"
+author: "MetricVoid"
+version: "0.1.0"
+main: "com.metricv.mirai.flatterbot.App"
+info: "GaussFacts"
+depends: []
